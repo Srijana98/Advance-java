@@ -1,62 +1,96 @@
 package Lab2;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 
+public class ques1 extends JFrame implements ActionListener {
+    private JTextArea textArea;
+    private JFileChooser fileChooser;
+    private String currentFile;
 
-	public class Question1 implements MouseListener{
-	    private Frame f;
-	    private Label hl;
-	    private Panel p;
-	    
-	    public Question1(){
-	        f = new Frame("Java MouseEvent Examples");
-	        f.setSize(400, 400);
-	        f.setLayout(new GridLayout(3, 1));
-	        
-	        hl=new Label("Mouse Entered",Label.CENTER);
-	        
-	        p = new Panel();
-	        p.setLayout(new FlowLayout());
-	        
-	        f.addWindowListener(new WindowAdapter(){
-	            public void windowClosing(WindowEvent e){
-	                f.dispose();
-	            }
-	        });
+    public ques1() {
+        setTitle("Library management system");
+        setSize(600, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-	        f.addMouseListener(this);
-	        
-	      
-	        
-	        f.add(hl);
-	        f.add(p);
-	        f.setVisible(true);
-	    }
-	    
+        textArea = new JTextArea();
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        add(scrollPane, BorderLayout.CENTER);
 
-	    public void mouseClicked(MouseEvent e) {
-	        hl.setText("Mouse Clicked at (" + e.getX() + ", " + e.getY() + ")");
-	    }
+        JMenuBar menuBar = new JMenuBar();
+        JMenu fileMenu = new JMenu("File");
+        JMenuItem newMenuItem = new JMenuItem("New");
+        JMenuItem openMenuItem = new JMenuItem("Open");
+        JMenuItem saveMenuItem = new JMenuItem("Save");
+        JMenuItem exitMenuItem = new JMenuItem("Exit");
 
-	    public void mouseEntered(MouseEvent e) {
-	        hl.setText("Mouse Entered at (" + e.getX() + ", " + e.getY() + ")");
-	    }
+        newMenuItem.addActionListener(this);
+        openMenuItem.addActionListener(this);
+        saveMenuItem.addActionListener(this);
+        exitMenuItem.addActionListener(this);
 
-	    public void mouseExited(MouseEvent e) {
-	        hl.setText("Mouse Exited at (" + e.getX() + ", " + e.getY() + ")");
-	    }
+        fileMenu.add(newMenuItem);
+        fileMenu.add(openMenuItem);
+        fileMenu.add(saveMenuItem);
+        fileMenu.addSeparator();
+        fileMenu.add(exitMenuItem);
+        menuBar.add(fileMenu);
 
-	    public void mousePressed(MouseEvent e) {
-	        hl.setText("Mouse Pressed at (" + e.getX() + ", " + e.getY() + ")");
-	    }
+        setJMenuBar(menuBar);
 
-	    public void mouseReleased(MouseEvent e) {
-	        hl.setText("Mouse Released at (" + e.getX() + ", " + e.getY() + ")");
-	    }
+        fileChooser = new JFileChooser();
+        currentFile = "";
 
-	    public static void main (String[] args){
-	        new Question1();
-	    }
-	}
+        setVisible(true);
+    }
 
+    public void actionPerformed(ActionEvent e) {
+        String command = e.getActionCommand();
+        switch (command) {
+            case "New":
+                textArea.setText("");
+                currentFile = "";
+                break;
+            case "Open":
+                int openResult = fileChooser.showOpenDialog(this);
+                if (openResult == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = fileChooser.getSelectedFile();
+                    openFile(selectedFile);
+                }
+                break;
+            case "Save":
+                int saveResult;
+                if (currentFile.isEmpty()) {
+                    saveResult = fileChooser.showSaveDialog(this);
+                    if (saveResult == JFileChooser.APPROVE_OPTION) {
+                        File selectedFile = fileChooser.getSelectedFile();
+                        saveFile(selectedFile);
+                    }
+                } else {
+                    saveResult = JOptionPane.showConfirmDialog(this, "Do you want to save changes to " + currentFile + "?", "Save", JOptionPane.YES_NO_CANCEL_OPTION);
+                    if (saveResult == JOptionPane.YES_OPTION) {
+                        saveFile(new File(currentFile));
+                    }
+                }
+                break;
+            case "Exit":
+                System.exit(0);
+                break;
+        }
+    }
+
+    private void openFile(File file) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            StringBuilder content = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+            textArea.setText(content.toString());
+            currentFile = file.getAbsolutePath();
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error opening file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
